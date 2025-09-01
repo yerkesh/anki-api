@@ -1,0 +1,47 @@
+name: build-and-push-to-docr
+
+on:
+  push:
+    branches: [ "master" ]   # поменяй при необходимости
+  workflow_dispatch: {}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set image name
+        id: vars
+        run: |
+          echo "IMAGE=registry.digitalocean.com/${{ secrets.DOCR_REGISTRY }}/${{ secrets.APP_NAME }}" >> $GITHUB_OUTPUT
+          echo "TAG=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+
+      - name: Setup Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to DOCR
+        uses: docker/login-action@v3
+        with:
+          registry: registry.digitalocean.com
+          username: ${{ secrets.DOCR_USERNAME }}
+          password: ${{ secrets.DOCR_PASSWORD }}
+
+      # Если хочешь multi-arch (amd64+arm64), раскомментируй platforms и оставь две платформы
+      - name: Build and Push
+        run: |
+          IMAGE="${{ steps.vars.outputs.IMAGE }}"
+          TAG="${{ steps.vars.outputs.TAG }}"
+          docker buildx build \
+            --platform "${{ secrets.DOCKER_PLATFORM || 'linux/amd64' }}" \
+            -t "${IMAGE}:${TAG}" \
+            -t "${IMAGE}:latest" \
+            . \
+            --push
+
+      - name: Show image references
+        run: |
+          echo "Pushed: ${{ steps.vars.outputs.IMAGE }}:${{ steps.vars.outputs.TAG }}"
+          echo "Pushed: ${{ steps.vars.outputs.IMAGE }}:latest"

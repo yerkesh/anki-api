@@ -1,0 +1,41 @@
+name: deploy-to-droplet
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [ "master" ]   # запускай деплой на пуш в main (можно убрать, если хочешь ручной только)
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set image name
+        id: vars
+        run: |
+          echo "IMAGE=registry.digitalocean.com/${{ secrets.DOCR_REGISTRY }}/${{ secrets.APP_NAME }}" >> $GITHUB_OUTPUT
+
+      - name: SSH into Droplet and deploy
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DROPLET_HOST }}
+          username: ${{ secrets.DROPLET_USER }}
+          key: ${{ secrets.DROPLET_SSH_KEY }}
+          script_stop: true
+          script: |
+            set -e
+
+            # 1) Логин в DOCR (через docker CLI)
+            echo "${{ secrets.DOCR_PASSWORD }}" | docker login registry.digitalocean.com -u "${{ secrets.DOCR_USERNAME }}" --password-stdin
+
+            # 2) Перейти в папку с compose
+            cd /opt/ankiapi
+
+            # 3) Подтянуть свежий образ
+            docker compose pull
+
+            # 4) Перезапустить контейнеры
+            docker compose up -d
+
+            # 5) Показать статус
+            docker compose ps
