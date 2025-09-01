@@ -36,7 +36,8 @@ SELECT
     f.singular_noun,
     f.base_verb,
     f.past_verb,
-    f.participle_verb
+    f.participle_verb,
+    f.repeated_at
 FROM flashcards f
 WHERE collection_id = $1 AND is_deleted = FALSE
 ORDER BY
@@ -64,7 +65,8 @@ SELECT
     f.singular_noun,
     f.base_verb,
     f.past_verb,
-    f.participle_verb
+    f.participle_verb,
+    f.repeated_at
 FROM flashcards f
 WHERE f.id = $1;
 

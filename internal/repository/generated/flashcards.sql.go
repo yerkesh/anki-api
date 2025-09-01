@@ -7,6 +7,8 @@ package generated
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const deleteFlashcardSoft = `-- name: DeleteFlashcardSoft :exec
@@ -206,24 +208,26 @@ SELECT
     f.singular_noun,
     f.base_verb,
     f.past_verb,
-    f.participle_verb
+    f.participle_verb,
+    f.repeated_at
 FROM flashcards f
 WHERE f.id = $1
 `
 
 type SelectFlashcardRow struct {
-	ID             int32  `db:"id" json:"id"`
-	CollectionID   int32  `db:"collection_id" json:"collection_id"`
-	Frontside      string `db:"frontside" json:"frontside"`
-	ReviewStatus   string `db:"review_status" json:"review_status"`
-	Description    string `db:"description" json:"description"`
-	Translated     string `db:"translated" json:"translated"`
-	PartOfSpeech   string `db:"part_of_speech" json:"part_of_speech"`
-	PluralNoun     string `db:"plural_noun" json:"plural_noun"`
-	SingularNoun   string `db:"singular_noun" json:"singular_noun"`
-	BaseVerb       string `db:"base_verb" json:"base_verb"`
-	PastVerb       string `db:"past_verb" json:"past_verb"`
-	ParticipleVerb string `db:"participle_verb" json:"participle_verb"`
+	ID             int32              `db:"id" json:"id"`
+	CollectionID   int32              `db:"collection_id" json:"collection_id"`
+	Frontside      string             `db:"frontside" json:"frontside"`
+	ReviewStatus   string             `db:"review_status" json:"review_status"`
+	Description    string             `db:"description" json:"description"`
+	Translated     string             `db:"translated" json:"translated"`
+	PartOfSpeech   string             `db:"part_of_speech" json:"part_of_speech"`
+	PluralNoun     string             `db:"plural_noun" json:"plural_noun"`
+	SingularNoun   string             `db:"singular_noun" json:"singular_noun"`
+	BaseVerb       string             `db:"base_verb" json:"base_verb"`
+	PastVerb       string             `db:"past_verb" json:"past_verb"`
+	ParticipleVerb string             `db:"participle_verb" json:"participle_verb"`
+	RepeatedAt     pgtype.Timestamptz `db:"repeated_at" json:"repeated_at"`
 }
 
 func (q *Queries) SelectFlashcard(ctx context.Context, id int32) (SelectFlashcardRow, error) {
@@ -242,6 +246,7 @@ func (q *Queries) SelectFlashcard(ctx context.Context, id int32) (SelectFlashcar
 		&i.BaseVerb,
 		&i.PastVerb,
 		&i.ParticipleVerb,
+		&i.RepeatedAt,
 	)
 	return i, err
 }
@@ -259,7 +264,8 @@ SELECT
     f.singular_noun,
     f.base_verb,
     f.past_verb,
-    f.participle_verb
+    f.participle_verb,
+    f.repeated_at
 FROM flashcards f
 WHERE collection_id = $1 AND is_deleted = FALSE
 ORDER BY
@@ -281,18 +287,19 @@ type SelectFlashcardsParams struct {
 }
 
 type SelectFlashcardsRow struct {
-	ID             int32  `db:"id" json:"id"`
-	CollectionID   int32  `db:"collection_id" json:"collection_id"`
-	Frontside      string `db:"frontside" json:"frontside"`
-	ReviewStatus   string `db:"review_status" json:"review_status"`
-	Description    string `db:"description" json:"description"`
-	Translated     string `db:"translated" json:"translated"`
-	PartOfSpeech   string `db:"part_of_speech" json:"part_of_speech"`
-	PluralNoun     string `db:"plural_noun" json:"plural_noun"`
-	SingularNoun   string `db:"singular_noun" json:"singular_noun"`
-	BaseVerb       string `db:"base_verb" json:"base_verb"`
-	PastVerb       string `db:"past_verb" json:"past_verb"`
-	ParticipleVerb string `db:"participle_verb" json:"participle_verb"`
+	ID             int32              `db:"id" json:"id"`
+	CollectionID   int32              `db:"collection_id" json:"collection_id"`
+	Frontside      string             `db:"frontside" json:"frontside"`
+	ReviewStatus   string             `db:"review_status" json:"review_status"`
+	Description    string             `db:"description" json:"description"`
+	Translated     string             `db:"translated" json:"translated"`
+	PartOfSpeech   string             `db:"part_of_speech" json:"part_of_speech"`
+	PluralNoun     string             `db:"plural_noun" json:"plural_noun"`
+	SingularNoun   string             `db:"singular_noun" json:"singular_noun"`
+	BaseVerb       string             `db:"base_verb" json:"base_verb"`
+	PastVerb       string             `db:"past_verb" json:"past_verb"`
+	ParticipleVerb string             `db:"participle_verb" json:"participle_verb"`
+	RepeatedAt     pgtype.Timestamptz `db:"repeated_at" json:"repeated_at"`
 }
 
 func (q *Queries) SelectFlashcards(ctx context.Context, arg SelectFlashcardsParams) ([]SelectFlashcardsRow, error) {
@@ -317,6 +324,7 @@ func (q *Queries) SelectFlashcards(ctx context.Context, arg SelectFlashcardsPara
 			&i.BaseVerb,
 			&i.PastVerb,
 			&i.ParticipleVerb,
+			&i.RepeatedAt,
 		); err != nil {
 			return nil, err
 		}

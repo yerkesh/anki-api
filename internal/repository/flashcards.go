@@ -245,6 +245,7 @@ func cardsToEntity(
 			Description:  card.Description,
 			Translated:   card.Translated,
 			ReviewStatus: entity.ReviewStatus(card.ReviewStatus),
+			RepeatedAt:   card.RepeatedAt.Time,
 			Grammar: entity.Grammar{
 				PartOfSpeech: card.PartOfSpeech,
 				NounForms: entity.NounForms{
